@@ -1,0 +1,254 @@
+#include <iostream>
+#include <fstream>
+#include <conio.h>
+ 
+using namespace std;
+ 
+ 
+class contact{ //arrays to store information
+private:
+    char lastname[500], firstname[500], middle[500], city[500], email[500], sex[500], section[500];
+    long long phonenum;
+ 
+ 
+    public:
+    void createContact(){
+        cout << "Enter Last name: " << endl;
+        cin >> lastname;
+        cout << "Enter First name: " << endl;
+        cin >> firstname;
+        cout << "Enter Middle name: " << endl;
+        cin >> middle;
+        cout << "Enter Gender: " << endl;
+        cin >> sex;
+        cout << "Enter Section: " << endl;
+        cin >> section;
+        cout << "Enter City: " << endl;
+        cin >> city;
+        cout << "Enter Email: " << endl;
+        cin >> email;
+        cout << "Enter Phone number: " << endl;
+        cin >> phonenum;
+        //Used to collect data/contact information of students, it will prompt to user to enter needed information
+    }
+ 
+    void showContact(){
+        cout << "Last Name: " << lastname << endl;
+        cout << "First Name: " << firstname << endl;
+        cout << "Middle Name: " << middle << endl;
+        cout << "Gender: " << sex << endl;
+        cout << "Section: " << section << endl;
+        cout << "City: " << city << endl;
+        cout << "Email Address: " << email << endl;
+        cout << "Phone number: " << phonenum << endl;
+        //Shows all the stored information in the file
+    }
+ 
+    //Save the data in the file
+    void writeOnFile(){
+        char ch;
+        ofstream f1; // ofstream means output file stream, used to write something into the file. f1 is the object of ofstream
+        f1.open("CMS.dat", ios::binary | ios::app); //takes 2 arguments, first one is the name of the file("CMS"), second one is which "mode" to open the file (binary)
+ 
+    do {
+    createContact();
+    f1.write(reinterpret_cast<char*>(this), sizeof(*this));
+    cout << "Do you have next data to enter? (y/n)";
+    cin >> ch;
+    } while(ch=='y');
+ 
+    cout << "Contact has been successfully created...";
+    f1.close();
+    //This function is used to write data into the file, the do while loop will keep asking the user to enter data as long as the enter 'y'
+    }
+ 
+    // Read the datas in the file
+    void readFromFile(){
+        ifstream f2;
+        f2.open("CMS.dat", ios::binary);
+ 
+        cout <<"\n=========================================\n";
+        cout <<"LIST OF CONTACT";
+        cout <<"\n=========================================\n";
+ 
+        //While reading a contact from the file, we want to read each record from the file until we reach the end. End of File (eof)
+        while(!f2.eof())
+        if(f2.read(reinterpret_cast<char*>(this), sizeof(*this))){
+            showContact(); // if the read function is successfully executed, we will call showcontact function
+            cout <<"\n=========================================\n";
+        }
+    f2.close();
+    }
+ 
+ 
+ 
+//Search on file function, if the user entered the correct last name it will show all information of the person with the phone number
+    void searchOnFile(){
+        ifstream f3;
+        string lname;
+        cout << "Enter last name: ";
+        cin >> lname;
+        f3.open("CMS.dat", ios::binary);
+ 
+        while(!f3.eof()){
+            if(f3.read(reinterpret_cast<char*>(this), sizeof(*this))) {
+                if(lname == lastname){
+                    showContact();
+                    return;
+                }
+            }
+        }
+        cout << "\n\nNo record found";
+        f3.close();
+    }
+ 
+ 
+//if the phone number did not match with the user phone number, we store it into the temporary file. If it matches, set the flag = 1
+    void deleteFromFile() {
+        long long phone;
+        int flag = 0;
+        ofstream f4;
+        ifstream f5;
+ 
+        f5.open("CMS.dat", ios::binary);
+        f4.open("temp.dat", ios::binary);
+ 
+        cout << "Enter phone number to delete: ";
+        cin >>phone;
+ 
+        while(!f5.eof()) {
+            if(f5.read(reinterpret_cast<char*>(this), sizeof(*this))) {
+                if(phonenum != phone) {
+                    f4.write(reinterpret_cast<char*>(this), sizeof(*this));
+                }
+                else flag = 1;
+            }
+        }
+    f5.close();
+    f4.close();
+    remove("CMS.dat");
+    rename("temp.dat", "CMS.dat");
+ 
+    flag == 1 ?
+    cout << "\tContact Deleted...":
+    cout << "\tContact Not Found...";
+    }
+ 
+ 
+    //Edit existing data
+    void editContact() {
+        long long phone;
+        fstream f6;
+ 
+        cout << "Edit Contact";
+        cout << "\n======================================\n";
+        cout << "Enter the phone number to edit: ";
+        cin >> phone;
+ 
+        f6.open("CMS.dat", ios::binary | ios::out | ios::in);
+ 
+        while(!f6.eof()) {
+            if(f6.read(reinterpret_cast<char*>(this), sizeof(*this))) {
+                if (phone == phonenum) {
+                    cout << "Enter new Phone number\n";
+                    createContact();
+ 
+                    int pos = -1*sizeof(*this);
+                    f6.seekp(pos, ios::cur);
+                    f6.write(reinterpret_cast<char*>(this), sizeof(*this));
+                    cout << endl << endl << "\tContact Successfully Updated...";
+                    return;
+                }
+            }
+        }
+    cout << "\n\nNo Record found";
+    f6.close();
+    }
+};
+ 
+ 
+ 
+ 
+int main(){
+    system("cls");
+    system("Color 3F"); // Color XY, X = background color, Y = text color
+ 
+    cout << "\n\n\n\n\n\n\n\n\t\t * The Contact System Manager *";
+    getch();
+ 
+    while(1) {
+        contact c1;
+        int choice;
+ 
+        system("cls");
+        system("Color 03");
+        cout << "\nCONTACT MANAGEMENT SYSTEM";
+        cout << "\n\nMAIN MENU";
+        cout << "\n========================================================\n";
+        cout << "[1] Add a new contact\n";
+        cout << "[2] Show all Contacts\n";
+        cout << "[3] Search Contact\n";
+        cout << "[4] Remove Contact\n";
+        cout << "[5] Edit Contact\n";
+        cout << "[0] Exit";
+        cout << "\n========================================================\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+ 
+ 
+        // Using switch to guide the user
+        switch(choice) {
+            case 1:
+            system("cls");
+            c1.writeOnFile();
+            break;
+ 
+            case 2:
+            system("cls");
+            c1.readFromFile();
+            break;
+ 
+            case 3:
+            system("cls");
+            c1.searchOnFile();
+            break;
+ 
+            case 4:
+            system("cls");
+            c1.deleteFromFile();
+            break;
+ 
+            case 5:
+            system("cls");
+            c1.editContact();
+            break;
+ 
+            case 0:
+            system("cls");
+            cout << "\n\n\n\t\t\tThank you for using CMS" << endl;
+            exit(0);
+            break;
+ 
+            default:
+            continue;
+        }
+ 
+        int opt;
+        cout << "\n\n===Enter the choice===\n[1] Main Menu\t\t[0] Exit\n";
+        cin >> opt;
+ 
+        switch(opt) {
+            case 0:
+            system("cls");
+            cout << "\n\n\n\t\t\tThank you for using CMS" << endl;
+            exit(0);
+            break;
+ 
+            default:
+            continue;
+        }
+ 
+    }
+ 
+return 0;
+}
